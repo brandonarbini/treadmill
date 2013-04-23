@@ -85,7 +85,18 @@ private
 
   def send_command(c)
     @tty.syswrite(c)
-    @tty.sysread(6)
+    tries = 0
+    response = nil
+    begin
+      response = @tty.sysread(6)
+    rescue Interrupt, Errno::EINTR
+      sleep 0.2
+      tries += 1
+      # STDOUT.puts "got exception -- tries = #{tries}"
+      retry if tries < 3
+      raise
+    end
+    response
   end
 
   def to_decimal(response_string)
